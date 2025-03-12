@@ -1,0 +1,111 @@
+
+    // Parse log entries with valid timestamps, log levels, and messages
+def test_parse_log_entries_with_valid_format():
+    # Sample log entry
+    log_entry = "2025-03-11 01:52:59.177 [info] Discover tests for workspace name: undefined - uri: c:\\Users\\willi\\AppData\\Roaming\\Code\\User\\settings.json"
+    
+    # Parse the log entry
+    parts = log_entry.split(" ", 3)
+    timestamp = f"{parts[0]} {parts[1]}"
+    log_level = parts[2].strip("[]")
+    message = parts[3]
+    
+    # Extract workspace name from message
+    import re
+    workspace_name_match = re.search(r"workspace name: ([^-]+)", message)
+    workspace_name = workspace_name_match.group(1).strip() if workspace_name_match else None
+    
+    # Extract URI from message
+    uri_match = re.search(r"uri: (.+)$", message)
+    uri = uri_match.group(1).strip() if uri_match else None
+    
+    # Assert the parsed components
+    assert timestamp == "2025-03-11 01:52:59.177"
+    assert log_level == "info"
+    assert "Discover tests for workspace name" in message
+    assert workspace_name == "undefined"
+    assert uri == "c:\\Users\\willi\\AppData\\Roaming\\Code\\User\\settings.json"
+
+    // Process log entries with missing workspace names
+def test_process_log_entries_with_missing_workspace_names():
+    # Sample log entries with different workspace name values
+    log_entries = [
+        "2025-03-11 01:52:59.177 [info] Discover tests for workspace name: undefined - uri: c:\\Users\\willi\\AppData\\Roaming\\Code\\User\\settings.json",
+        "2025-03-11 01:53:41.834 [info] Discover tests for workspace name: digital-double-mobile - uri: c:\\Users\\willi\\Desktop\\digital-double-mobile\\venv\\Lib\\site-packages\\_distutils_hack\\__init__.py"
+    ]
+    
+    # Process the log entries
+    results = []
+    for entry in log_entries:
+        parts = entry.split(" ", 3)
+        timestamp = f"{parts[0]} {parts[1]}"
+        log_level = parts[2].strip("[]")
+        message = parts[3]
+        
+        # Extract workspace name from message
+        import re
+        workspace_name_match = re.search(r"workspace name: ([^-]+)", message)
+        workspace_name = workspace_name_match.group(1).strip() if workspace_name_match else None
+        
+        # Handle missing or "undefined" workspace names
+        if workspace_name == "undefined":
+            workspace_name = None
+            
+        results.append({
+            "timestamp": timestamp,
+            "log_level": log_level,
+            "workspace_name": workspace_name,
+            "message": message
+        })
+    
+    # Assert the processed results
+    assert results[0]["workspace_name"] is None
+    assert results[1]["workspace_name"] == "digital-double-mobile"
+    assert len(results) == 2
+
+    // Extract timestamp components (year, month, day, hour, minute, second, millisecond) from log entries
+def test_extract_timestamp_components_from_log_entries():
+    # Sample log entry
+    log_entry = "2025-03-11 01:52:59.177 [info] Discover tests for workspace name: undefined - uri: c:\\Users\\willi\\AppData\\Roaming\\Code\\User\\settings.json"
+    
+    # Parse the log entry
+    parts = log_entry.split(" ", 3)
+    date_part = parts[0]
+    time_part = parts[1]
+    
+    # Extract date components
+    year, month, day = map(int, date_part.split("-"))
+    
+    # Extract time components
+    time_parts = time_part.split(":")
+    hour = int(time_parts[0])
+    minute = int(time_parts[1])
+    second, millisecond = map(int, time_parts[2].split("."))
+    
+    # Assert the extracted components
+    assert year == 2025
+    assert month == 3
+    assert day == 11
+    assert hour == 1
+    assert minute == 52
+    assert second == 59
+    assert millisecond == 177
+
+    // Identify and extract log levels (info, error, warning, etc.) from square brackets
+def test_extract_log_levels_from_log_entries():
+    # Sample log entries
+    log_entries = [
+        "2025-03-11 01:52:59.177 [info] Discover tests for workspace name: undefined - uri: c:\\Users\\willi\\AppData\\Roaming\\Code\\User\\settings.json",
+        "2025-03-11 01:53:11.387 [info] Discover tests for workspace name: undefined - uri: c:\\Users\\willi\\AppData\\Roaming\\Code\\User\\settings.json",
+        "2025-03-11 01:53:41.834 [info] Discover tests for workspace name: digital-double-mobile - uri: c:\\Users\\willi\\Desktop\\digital-double-mobile\\venv\\Lib\\site-packages\\_distutils_hack\\__init__.py"
+    ]
+    
+    # Extract log levels
+    extracted_log_levels = []
+    for entry in log_entries:
+        parts = entry.split(" ", 3)
+        log_level = parts[2].strip("[]")
+        extracted_log_levels.append(log_level)
+    
+    # Assert the extracted log levels
+    assert extracted_log_levels == ["info", "info", "info"]
