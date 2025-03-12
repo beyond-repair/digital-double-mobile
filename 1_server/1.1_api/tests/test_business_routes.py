@@ -5,17 +5,15 @@ from ..business_routes import router
 
 client = TestClient(router)
 
-
- 
 class TestBusinessRoutes(unittest.IsolatedAsyncioTestCase):
 
     @patch('..business_routes.TaskManager.create', new_callable=MagicMock)
     @patch('..business_routes.WebSocketBroker.broadcast', new_callable=MagicMock)
-    @patch(
-        '..business_routes.WebSocketBroker.broadcast', 
-        new_callable=MagicMock
-    )
-    async def test_create_task(self, mock_broadcast, mock_create):
+    async def test_create_task(
+        self, 
+        mock_broadcast: MagicMock, 
+        mock_create: MagicMock
+    ):
         mock_create.return_value = {
             "id": "test-uuid",
             "description": "Test task",
@@ -37,4 +35,3 @@ class TestBusinessRoutes(unittest.IsolatedAsyncioTestCase):
 
 if __name__ == '__main__':
     unittest.main()
-
