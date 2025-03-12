@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ../../1_server
+    ports:
+      - "8000:8000"
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - DB_URL=postgresql://postgres:5432
+    depends_on:
+      - redis
+      - postgres
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+
+  postgres:
+    image: postgres:13
+    environment:
+      POSTGRES_PASSWORD: secure_password
+    ports:
+      - "5432:5432"
+
+  ai_orchestrator:
+    build: 
+      context: ../../1_server
+      dockerfile: Dockerfile.ai
+    environment:
+      - MODEL_PATH=/models
+      - CUDA_VISIBLE_DEVICES=0
+    volumes:
+      - ../../5_configs/ai_models:/models

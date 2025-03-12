@@ -1,0 +1,23 @@
+models:
+  deepseek_r1:
+    quantization: 4bit
+    batch_size: 1
+    max_sequence_length: 512
+    temperature: 0.7
+    top_p: 0.9
+
+agent_pools:
+  business:
+    min_agents: 2
+    max_agents: 10
+    scaling_factor: 1.5
+
+  creative:
+    min_agents: 1
+    max_agents: 5
+    scaling_factor: 1.2
+
+execution:
+  local_threshold: 100ms
+  cloud_fallback: true
+  hybrid_optimization: enabled
