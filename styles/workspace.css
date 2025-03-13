@@ -1,0 +1,17 @@
+.sidebar {
+    width: 20%;
+    float: left;
+}
+
+.main-content {
+    width: 80%;
+    float: left;
+}
+
+.workspace-header {
+    width: 100%;
+}
+
+.workspace-footer {
+    width: 100%;
+}

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Retro-Futuristic Workspace</title>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles/workspace.css">
+</head>
+<body>
+  <div class="pixel-art-container">
+    <!-- Parallax Layers -->
+    <div class="parallax-layer layer-1"></div>
+    <div class="parallax-layer layer-2"></div>
+    <div class="parallax-layer layer-3"></div>
+
+    <!-- CRT Scanline Overlay -->
+    <div class="crt-effect"></div>
+
+    <!-- Radial Menu System -->
+    <div class="radial-menu">
+      <div class="menu-item browser"></div> <!-- Browser -->
+      <div class="menu-item calendar"></div> <!-- Calendar -->
+      <div class="menu-item notes"></div> <!-- Notes -->
+      <div class="glitch menu-item settings"></div> <!-- Settings (with glitch effect) -->
+    </div>
+
+    <!-- Dynamic UI Elements -->
+    <div id="tool-layout" class="draggable">
+      <!-- Placeholder for customizable tools -->
+      <div class="tool-window">Browser</div>
+      <div class="tool-window">Calendar</div>
+    </div>
+  </div>
+
+  <div class="sidebar">
+    <!-- Sidebar content -->
+  </div>
+  <div class="main-content">
+    <!-- Main content -->
+  </div>
+  <div class="workspace-header">
+    <!-- Header content -->
+  </div>
+  <div class="workspace-footer">
+    <!-- Footer content -->
+  </div>
+
+  <script src="workspace.js"></script>
+</body>
+</html>
