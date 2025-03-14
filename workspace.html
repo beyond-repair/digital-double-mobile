@@ -1,52 +1,58 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Retro-Futuristic Workspace</title>
-  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css">
-  <link rel="stylesheet" href="styles/workspace.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#030816">
+    <title>Digital Double Mobile</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles/workspace.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" rel="stylesheet">
 </head>
 <body>
-  <div class="pixel-art-container">
-    <!-- Parallax Layers -->
-    <div class="parallax-layer layer-1"></div>
-    <div class="parallax-layer layer-2"></div>
-    <div class="parallax-layer layer-3"></div>
+    <div class="app-container">
+        <div class="scene-container">
+            <canvas id="3d-scene"></canvas>
+            <div class="crt-overlay"></div>
+        </div>
 
-    <!-- CRT Scanline Overlay -->
-    <div class="crt-effect"></div>
+        <main class="workspace-content">
+            <div class="tools-section">
+                <div class="tool-menu">
+                    <div class="menu-item" data-tool="ai">🤖 AI Assistant</div>
+                    <div class="menu-item" data-tool="tasks">📋 Tasks</div>
+                    <div class="menu-item" data-tool="ar">🎯 AR View</div>
+                </div>
+                <div class="tools-grid">
+                    <!-- Tools get dynamically inserted here -->
+                </div>
+            </div>
+            
+            <div class="chat-interface">
+                <div class="agent-status">
+                    <div class="agent-avatar"></div>
+                    <div class="model-info">
+                        <select id="model-dropdown" class="pixel-select">
+                            <option value="deepseek-local">DeepSeek (Local)</option>
+                            <option value="llama-cloud">Llama (Cloud)</option>
+                        </select>
+                        <div class="execution-mode">Turbo Mode: <span id="turbo-status">Off</span></div>
+                    </div>
+                </div>
+                <div id="chatWindow" class="chat-window retro-terminal"></div>
+                <div class="chat-input-container">
+                    <input type="text" id="chatInput" class="pixel-input" 
+                           placeholder="Enter command or question...">
+                    <button id="sendMessage" class="pixel-button">Send</button>
+                </div>
+            </div>
+        </main>
 
-    <!-- Radial Menu System -->
-    <div class="radial-menu">
-      <div class="menu-item browser"></div> <!-- Browser -->
-      <div class="menu-item calendar"></div> <!-- Calendar -->
-      <div class="menu-item notes"></div> <!-- Notes -->
-      <div class="glitch menu-item settings"></div> <!-- Settings (with glitch effect) -->
+        <nav class="navigation-dock">
+            <!-- Icons will be dynamically inserted -->
+        </nav>
     </div>
-
-    <!-- Dynamic UI Elements -->
-    <div id="tool-layout" class="draggable">
-      <!-- Placeholder for customizable tools -->
-      <div class="tool-window">Browser</div>
-      <div class="tool-window">Calendar</div>
-    </div>
-  </div>
-
-  <div class="sidebar">
-    <!-- Sidebar content -->
-  </div>
-  <div class="main-content">
-    <!-- Main content -->
-  </div>
-  <div class="workspace-header">
-    <!-- Header content -->
-  </div>
-  <div class="workspace-footer">
-    <!-- Footer content -->
-  </div>
-
-  <script src="workspace.js"></script>
+    <script src="workspace.js"></script>
 </body>
 </html>
