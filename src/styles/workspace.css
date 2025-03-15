@@ -1,3 +1,4 @@
+/* Base */
 .pixel-workspace {
   background-color: var(--deep-blue);
   min-height: 100vh;
@@ -13,14 +14,18 @@
   content-visibility: auto;
   paint-order: strict;
   contain: layout style paint;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* Add performance optimizations */
+  contain: content;
+  content-visibility: auto;
+  contain-intrinsic-size: 0 1000px;
 }
 
+/* CRT Effects - Combined from multiple files */
 .crt-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
   pointer-events: none;
   background: repeating-linear-gradient(
     0deg,
@@ -29,7 +34,12 @@
     transparent 1px,
     transparent 2px
   );
-  composite: layer;
+  animation: scanlines 1.5s steps(30) infinite;
+  z-index: 1;
+  /* Use GPU acceleration */
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  will-change: transform;
 }
 
 .workspace-grid {
@@ -38,15 +48,19 @@
   gap: clamp(0.5rem, 2vw, 1.5rem);
   padding: clamp(1rem, 3vw, 2rem);
   container-type: inline-size;
-  contain: layout style;
+  contain: layout size;
   content-visibility: auto;
   contain-intrinsic-size: 0 500px;
   will-change: transform, opacity;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  view-timeline-name: --scroll;
+  view-timeline-axis: block;
 }
 
 @container (min-width: 768px) {
   .workspace-grid {
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   }
 }
 
@@ -58,6 +72,8 @@
 
 .glitch-effect {
   animation: glitch 0.3s infinite;
+  animation-timing-function: steps(1);
+  will-change: transform;
 }
 
 @layer base, animations, effects;
@@ -72,17 +88,19 @@
       rgba(255,255,255,0.1) 2px,
       transparent 2px
     );
-    animation: scanlines 1.5s linear infinite;
+    animation: scanlines 1.5s steps(30) infinite;
     transform: translate3d(0, 0, 0);
     will-change: transform;
     isolation: isolate;
     mix-blend-mode: overlay;
+    pointer-events: none;
   }
 }
 
 @keyframes scanlines {
-  0% { transform: translateY(0); }
-  100% { transform: translateY(24px); }
+  /* Use transform instead of top/left for better performance */
+  from { transform: translateY(0); }
+  to { transform: translateY(100%); }
 }
 
 @media (min-width: 3840px) {
@@ -102,6 +120,30 @@
   .crt-scanlines {
     animation: none;
   }
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+  .loading-pixel {
+    animation: none;
+  }
+  
+  .menu-item {
+    transition: none;
+  }
+}
+
+[role="alert"] {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 2000;
+}
+
+/* Focus styles */
+.menu-item:focus-visible {
+  outline: 3px solid #00ff00;
+  outline-offset: 2px;
 }
 
 .pixel-text {
@@ -193,4 +235,51 @@
   border-radius: 50%;
   margin-right: 8px;
   animation: pulse 1s infinite;
+}
+
+/* Loading states */
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.8);
+  display: grid;
+  place-items: center;
+  z-index: 1000;
+  transition: opacity 0.2s ease-out;
+  opacity: 0;
+}
+
+.loading-overlay[data-visible="true"] {
+  opacity: 1;
+}
+
+.loading-pixel {
+  width: 32px;
+  height: 32px;
+  background: #00ff00;
+  animation: pixelPulse 1s infinite steps(1);
+}
+
+@keyframes pixelPulse {
+  50% { opacity: 0; }
+}
+
+/* Dark mode detection */
+@media (prefers-color-scheme: dark) {
+  .pixel-workspace {
+    --glow-intensity: 1;
+  }
+}
+
+@media (prefers-color-scheme: light) {
+  .pixel-workspace {
+    --glow-intensity: 0.7;
+  }
+}
+
+/* Keyboard navigation */
+:focus-visible {
+  outline: 2px solid #00ff00;
+  outline-offset: 4px;
+  box-shadow: 0 0 10px rgba(0, 255, 0, calc(0.5 * var(--glow-intensity)));
 }

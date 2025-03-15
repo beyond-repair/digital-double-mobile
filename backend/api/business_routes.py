@@ -1,14 +1,20 @@
-from fastapi import (APIRouter, Depends, HTTPException, status,
-                     Response, BackgroundTasks)
-
-from pydantic import BaseModel
+from fastapi import (
+    APIRouter,
+    Depends,
+    HTTPException,
+    status,
+    Response,
+    BackgroundTasks
+)
+from .database import create_pool
+from pydantic import BaseModel, Field
 from datetime import datetime
 from typing import Optional, Dict, Any
 from enum import Enum
 import sys
 import os
 from security.jwt_auth import validate_token
-import uuid  # New import for UUID generation
+import uuid
 import asyncio
 from functools import lru_cache
 from asyncio import Semaphore
@@ -18,16 +24,25 @@ from contextlib import asynccontextmanager
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
+class PriorityLevel(str, Enum):
+    LOW = "LOW"
+    MEDIUM = "MEDIUM" 
+    HIGH = "HIGH"
+
+
 class TaskSchema(BaseModel):
-    description: str
+    description: str = Field(..., min_length=1, max_length=500)
     due_date: Optional[datetime] = None
+    priority: PriorityLevel = Field(default=PriorityLevel.LOW)
 
-    class PriorityLevel(Enum):
-        LOW = 1
-        MEDIUM = 2
-        HIGH = 3
-
-    priority: PriorityLevel = PriorityLevel.LOW  # Default to LOW priority
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "description": "Implement new feature",
+                "due_date": "2024-01-01T00:00:00Z",
+                "priority": "LOW"
+            }
+        }
 
 
 class TaskManager:
@@ -49,7 +64,7 @@ class TaskManager:
 
     @staticmethod
     async def create(task_data: TaskSchema) -> Dict[str, Any]:
-        async with TaskManager.get_connection() as conn:
+        async with TaskManager.get_connection():
             task_id = str(uuid.uuid4())
             # Use connection pool for DB operations
             return {"id": task_id, **task_data.dict()}
@@ -69,25 +84,43 @@ class TaskBatch:
         self.max_size = max_size
         self._lock = asyncio.Lock()
         self.priority_queues = {
-            TaskSchema.PriorityLevel.HIGH: [],
-            TaskSchema.PriorityLevel.MEDIUM: [],
-            TaskSchema.PriorityLevel.LOW: []
+            PriorityLevel.HIGH: [],
+            PriorityLevel.MEDIUM: [],
+            PriorityLevel.LOW: []
+        }
+        self.retry_delays = {
+            PriorityLevel.HIGH: 1,
+            PriorityLevel.MEDIUM: 5,
+            PriorityLevel.LOW: 10
         }
 
-    async def add(self, task: Dict[str, Any]):
+    async def add(self, task: Dict[str, Any], retry_count: int = 0):
         async with self._lock:
-            priority = task.get('priority', TaskSchema.PriorityLevel.LOW)
+            priority = PriorityLevel(task.get('priority', PriorityLevel.LOW))
+            task['retry_count'] = retry_count
             self.priority_queues[priority].append(task)
+            
             if sum(len(q) for q in self.priority_queues.values()) >= self.max_size:
                 await self.process()
 
     async def process(self):
-        # Process high priority first
-        for priority in TaskSchema.PriorityLevel:
+        for priority in PriorityLevel:
             queue = self.priority_queues[priority]
             if queue:
-                await self._process_batch(queue)
+                try:
+                    await self._process_batch(queue, priority)
+                except Exception as e:
+                    await self._handle_batch_error(queue, priority, e)
                 queue.clear()
+
+    async def _handle_batch_error(self, batch: list, priority: PriorityLevel, error: Exception):
+        delay = self.retry_delays[priority]
+        for task in batch:
+            if task['retry_count'] < 3:
+                await asyncio.sleep(delay * (task['retry_count'] + 1))
+                await self.add(task, task['retry_count'] + 1)
+            else:
+                print(f"Task {task['id']} failed after 3 retries: {error}")
 
     async def _process_batch(self, batch):
         try:
@@ -98,26 +131,27 @@ class TaskBatch:
         except Exception as e:
             print(f"Batch processing error: {e}")
 
+
 task_batch = TaskBatch()
 
 
 router = APIRouter()
+
 
 @lru_cache(maxsize=100)
 def get_cached_config() -> Dict[str, Any]:
     # Cache configuration settings
     return {"max_tasks": 100, "timeout": 30}
 
-@router.post("/tasks")
+
+@router.post("/tasks", response_model=Dict[str, str])
 async def create_task(
     task_data: TaskSchema,
     response: Response,
-  # Keep this line unchanged
-    background_tasks: BackgroundTasks,  
-    token_data=Depends(validate_token)
+    background_tasks: BackgroundTasks,
+    token_data: Dict = Depends(validate_token)
 ):
     try:
-        config = get_cached_config()
         task = await TaskManager.create(task_data)
         await task_batch.add(task)
         
@@ -133,3 +167,7 @@ async def create_task(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e)
         ) from e
+
+
+def update_metrics(task):
+    pass  # Implement metric tracking logic here
