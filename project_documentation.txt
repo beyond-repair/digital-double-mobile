@@ -1,6 +1,7 @@
 # Digital Double Mobile Project Documentation
 
 ## Root Directory
+
 - **README.md**: Project overview, setup instructions, and key features.
 - **package.json/package-lock.json**: Node.js project dependencies and lockfile.
 - **server.js**: Main backend server entry point (likely Node.js/Express).
@@ -10,39 +11,49 @@
 - **styles.css**: Global CSS styles for non-Frontend components.
 
 ## .git/ (Git Repository)
+
 - Standard Git repository files and configuration.
 
 ## .pytest_cache/.venv/ (Python Environment)
+
 - Python virtual environment and test caches for backend experiments.
 
 ## backend/
+
 ### backend/api/
+
 - **business_routes.py**: Handles core business logic endpoints (e.g., user data, transactions).
 - **security/jwt_auth.py**: JWT token validation middleware.
   - **Check**: Ensure `JWT_SECRET_KEY` is set in `.env` (missing in current config).
   - **Enhancement**: Add token refresh endpoints to reduce user login friction.
 
 ### backend/core/
+
 - Business logic (e.g., data processing, core algorithms).
 - **Enhancement**: Refactor monolithic files into smaller, testable modules.
 
 ### backend/security/
+
 - Authentication/authorization handlers (JWT, OAuth).
 - **Check**: Ensure password hashing is implemented (bcrypt recommended).
 
 ## config/
-- **5.1_.env.sample**: Environment variable template (rename to .env for use).
+
+- **5.1_.env.sample**: Environment variable template (rename to `.env` for use).
 - **Issue**: Underscore in filename may cause issues; standard is `.env`.
-- **Missing Configs**: Firebase credentials (lines 11-16 in .env.sample are empty).
+- **Missing Configs**: Firebase credentials (lines 11-16 in [.env.sample](./config/5.1_.env.sample) are empty).
 - **Enhancement**: Add environment-specific configs (dev/prod).
 
 ## deploy/
+
 ### deploy/3.1_docker/
+
 - Dockerfiles and compose files for deployment.
 - **Check**: Validate Docker images build successfully.
 - **Enhancement**: Update to latest Node/Python base images.
 
 ## docs/
+
 - **api-reference.md**: API endpoints and usage examples.
 - **architecture.md**: System design diagrams/architecture.
 - **contributor-guide.md**: Onboarding for new developers.
@@ -50,6 +61,7 @@
 - **security-model.md**: Security practices and vulnerabilities addressed.
 
 ## frontend/
+
 - Flutter-based mobile app.
 - **main.dart**: App entry point (navigation setup, theme configuration).
   - **Bug**: Duplicate `build()` methods (lines 13-37 and 33-37) causing potential runtime errors. **RESOLVED** ✅
@@ -59,34 +71,42 @@
   - **Enhancement**: Add loading states and error handling for API calls.
 
 ## server_experimental/ (Python)
+
 - Alternative backend using FastAPI (experimental).
 - **__init__.py**: Module initialization for Python package structure.
 - **Enhancement**: Compare performance with Node.js backend for critical paths.
 
 ## scripts/
+
 - **install-shellcheck.ps1**: PowerShell script for linting setup.
 - **Enhancement**: Add CI/CD scripts for automated testing/deployment.
 
 ## src/ (Possibly unused or legacy)
+
 - Contains AI models, components, services, and utilities.
 - **Check**: Verify if these are integrated into the main app/backend.
 - **Enhancement**: Clean up unused code or document deprecated modules.
 
 ## styles/
+
 - **workspace.css**: Styles for admin/config interfaces.
 
 ## node_modules/
+
 - Auto-generated dependency folder (no manual edits needed).
 
 ## .vscode/
+
 - VS Code workspace settings and launch configurations.
 
 ## Critical Issues Found
+
 1. **Firebase Configuration**: Missing credentials in `.env` (lines 11-16 must be filled).
 2. **JWT Secret Key**: Not defined in `.env` (required for token validation).
 3. **Password Strength**: Login form lacks password complexity validation (min 8 chars, symbols).
 
 ## Recommended Enhancements
+
 - Implement HTTPS enforcement in server configurations.
 - Add unit/e2e tests for critical paths (e.g., auth flow, API endpoints).
 - Optimize image assets (e.g., `distressed-metal-bg.png`) for mobile performance.
