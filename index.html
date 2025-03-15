@@ -1,13 +1,29 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Digital Double Mobile</title>
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/index.tsx"></script>
-  </body>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#030816" />
+  <title>Digital Double Mobile</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <meta name="description" content="Digital Double Mobile - AI-powered business assistant">
+  <meta name="theme-color" content="#030816">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="dns-prefetch" href="https://api.digitaldouble.com">
+  <link rel="modulepreload" href="/src/index.tsx">
+  <script>
+    window.onerror = function(msg, url, line) {
+      console.error(`Error: ${msg} at ${url}:${line}`);
+      // Report to monitoring service
+    }
+  </script>
+</head>
+<body>
+  <div id="root"></div>
+  <noscript>You need to enable JavaScript to run this app.</noscript>
+  <script type="module" src="/src/index.tsx" async></script>
+</body>
 </html>

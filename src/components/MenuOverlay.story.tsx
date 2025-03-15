@@ -1,6 +1,13 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { MenuOverlay } from './MenuOverlay';
 
+interface MenuOverlayProps {
+  activeModel: string;
+  onModelChange: (model: string) => void;
+  error?: Error;
+  resetErrorBoundary?: () => void;
+}
+
 const meta: Meta<typeof MenuOverlay> = {
   component: MenuOverlay,
   title: 'Components/MenuOverlay',

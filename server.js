@@ -2,6 +2,10 @@ require('dotenv').config();
 
 const express = require('express');
 const app = express();
+const https = require('https');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+const compression = require('compression');
 const port = process.env.PORT || 3000;
 
 // Load dependencies with error handling
@@ -15,22 +19,30 @@ function loadModule(moduleName) {
 }
 
 const axios = loadModule('axios');
-const compression = loadModule('compression');
-const helmet = loadModule('helmet');
-const rateLimit = loadModule('express-rate-limit');
 const cluster = loadModule('cluster');
 const os = loadModule('os');
 
-// Security and optimization middleware
+// Security middleware
 app.use(helmet());
 app.use(compression());
 
 // Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100 // limit each IP to 100 requests per windowMs
+  max: 100, // limit each IP to 100 requests per windowMs
+  message: 'Too many requests, please try again later'
 });
 app.use(limiter);
+
+// Force HTTPS
+if (process.env.NODE_ENV === 'production') {
+  app.use((req, res, next) => {
+    if (!req.secure) {
+      return res.redirect('https://' + req.headers.host + req.url);
+    }
+    next();
+  });
+}
 
 app.use(express.json());
 
@@ -53,27 +65,38 @@ const metrics = {
 const requestBatcher = {
   queue: [],
   processing: false,
+  batchSize: parseInt(process.env.MAX_BATCH_SIZE) || 10,
+  timeout: null,
+
   async process() {
     if (this.processing || this.queue.length === 0) return;
     this.processing = true;
+    clearTimeout(this.timeout);
     
-    const batch = this.queue.splice(0, 10);
+    const batch = this.queue.splice(0, this.batchSize);
     try {
-      const responses = await Promise.all(batch.map(req => 
-        axios.post('https://api-inference.huggingface.co/models/YOUR_MODEL_ID', req.body)
+      const responses = await Promise.allSettled(batch.map(req => 
+        axios.post(req.modelConfig.url, req.body, {
+          timeout: parseInt(process.env.INFERENCE_TIMEOUT) || 30000
+        })
       ));
       
-      batch.forEach((req, i) => {
-        apiCache.set(JSON.stringify(req.body), {
-          data: { response: responses[i].data[0].generated_text },
-          timestamp: Date.now()
-        });
+      responses.forEach((result, i) => {
+        if (result.status === 'fulfilled') {
+          apiCache.set(JSON.stringify(batch[i].body), {
+            data: result.value.data,
+            timestamp: Date.now()
+          });
+        }
       });
     } catch (error) {
       console.error('Batch processing error:', error);
+      failureCount++;
     }
     this.processing = false;
-    this.process();
+    if (this.queue.length > 0) {
+      this.timeout = setTimeout(() => this.process(), 100);
+    }
   }
 };
 
@@ -89,7 +112,39 @@ const MODEL_CONFIG = {
   }
 };
 
-app.post('/api/chat', async (req, res) => {
+// Add input sanitization
+const sanitizeInput = (str) => {
+  return str.trim()
+    .slice(0, parseInt(process.env.INPUT_MAX_LENGTH) || 1000)
+    .replace(/[<>]/g, ''); // Basic XSS protection
+};
+
+// Add input validation middleware
+const validateInput = (req, res, next) => {
+  const { message, model } = req.body;
+  if (!message || typeof message !== 'string') {
+    return res.status(400).json({ error: 'Invalid message format' });
+  }
+  req.body.message = sanitizeInput(message);
+  if (model && !MODEL_CONFIG[model]) {
+    return res.status(400).json({ error: 'Invalid model selection' });
+  }
+  next();
+};
+
+// Add request tracking
+app.use((req, res, next) => {
+  req._startTime = Date.now();
+  req._requestId = Math.random().toString(36).substring(7);
+  res.on('finish', () => {
+    const duration = Date.now() - req._startTime;
+    console.log(`Request ${req._requestId} completed in ${duration}ms`);
+  });
+  next();
+});
+
+// Add validation to chat endpoint
+app.post('/api/chat', validateInput, async (req, res) => {
   if (circuitOpen) {
     return res.status(503).json({ error: 'Service temporarily unavailable' });
   }
@@ -152,13 +207,15 @@ app.post('/api/chat', async (req, res) => {
 app.use(express.static(__dirname, staticOptions));
 
 app.listen(port, () => {
-  console.log(`Server running on http://localhost:${port}`);
+  console.log(`Server running on port ${port}`);
 });
 
 // Error handling
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).json({ error: 'Internal Server Error' });
+  res.status(500).json({
+    error: process.env.NODE_ENV === 'development' ? err.message : 'Internal Server Error'
+  });
 });
 
 // Memory management

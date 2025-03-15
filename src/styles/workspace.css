@@ -20,6 +20,24 @@
   contain: content;
   content-visibility: auto;
   contain-intrinsic-size: 0 1000px;
+  /* GPU acceleration */
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  will-change: transform;
+
+  /* Memory optimization */
+  contain: strict;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 1000px;
+  
+  /* Rendering optimizations */
+  text-rendering: optimizeLegibility;
+  paint-order: strict;
+  
+  /* Smooth scrolling only on capable devices */
+  @media (prefers-reduced-motion: no-preference) {
+    scroll-behavior: smooth;
+  }
 }
 
 /* CRT Effects - Combined from multiple files */
@@ -144,6 +162,7 @@
 .menu-item:focus-visible {
   outline: 3px solid #00ff00;
   outline-offset: 2px;
+  box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
 }
 
 .pixel-text {
@@ -187,11 +206,14 @@
   padding: 8px 16px;
   cursor: pointer;
   transition: all 0.3s ease;
+  transition: --menu-glow 0.3s ease;
 }
 
 .menu-item:hover {
   background: rgba(0, 255, 0, 0.2);
   transform: scale(1.05);
+  --menu-glow: rgba(0, 255, 0, 0.2);
+  transform: translateZ(0);
 }
 
 .model-status {
@@ -282,4 +304,145 @@
   outline: 2px solid #00ff00;
   outline-offset: 4px;
   box-shadow: 0 0 10px rgba(0, 255, 0, calc(0.5 * var(--glow-intensity)));
+}
+
+/* Reduce animations for better performance */
+@media (prefers-reduced-motion: reduce) {
+  .glitch-effect,
+  .crt-scanlines,
+  .menu-item,
+  .loading-pixel {
+    animation: none;
+    transition: none;
+  }
+}
+
+/* High-performance animations */
+@property --menu-glow {
+  syntax: '<color>';
+  inherits: false;
+  initial-value: rgba(0, 255, 0, 0);
+}
+
+/* Improved accessibility */
+.model-select:focus-visible,
+.menu-item:focus-visible {
+  outline: 3px solid #00ff00;
+  outline-offset: 2px;
+  box-shadow: 
+    0 0 0 4px rgba(0, 255, 0, 0.3),
+    0 0 0 8px rgba(0, 255, 0, 0.1);
+  /* Improve animation performance */
+  transform: translate3d(0, 0, 0);
+  transition: box-shadow 0.2s ease-out;
+}
+
+/* Progressive enhancement */
+@supports (backdrop-filter: blur(10px)) {
+  .holographic-menu {
+    backdrop-filter: blur(10px);
+    background: rgba(0, 0, 0, 0.7);
+  }
+}
+
+.menu-overlay {
+  isolation: isolate;
+  contain: content;
+}
+
+@media (forced-colors: active) {
+  .menu-item {
+    border: 2px solid ButtonText;
+    color: ButtonText;
+  }
+  
+  .model-status {
+    border-color: ButtonText;
+    color: ButtonText;
+  }
+}
+
+/* Preload animations */
+@media (prefers-reduced-motion: no-preference) {
+  .menu-overlay::before {
+    content: '';
+    position: absolute;
+    opacity: 0;
+    animation: none;
+  }
+}
+
+/* Performance optimizations */
+@layer performance {
+  .menu-overlay {
+    isolation: isolate;
+    contain: content layout style;
+    content-visibility: auto;
+    view-transition-name: menu;
+  }
+
+  .menu-item {
+    /* ...existing code... */
+    transform: translateZ(0);
+    transition: transform 0.2s ease-out, background-color 0.2s ease-out;
+    will-change: transform, background-color;
+  }
+
+  @keyframes optimized-pulse {
+    from { transform: scale(1); }
+    to { transform: scale(1.05); }
+  }
+
+  .download-progress::before {
+    /* ...existing code... */
+    animation: optimized-pulse 0.5s ease-in-out infinite alternate;
+    will-change: transform;
+  }
+}
+
+/* Memory optimizations */
+@media (max-memory: 512mb) {
+  .crt-overlay,
+  .glitch-effect {
+    animation: none;
+  }
+  
+  .holographic-menu {
+    backdrop-filter: none;
+    background: rgba(0, 0, 0, 0.9);
+  }
+}
+
+/* Performance monitoring styles */
+.performance-stats {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.8em;
+  padding: 8px;
+  background: rgba(0, 0, 0, 0.8);
+  border: 1px solid #00ff00;
+  margin-top: 12px;
+}
+
+.performance-warning {
+  color: #ff3333;
+  animation: flash 1s ease-in-out infinite alternate;
+  will-change: opacity;
+}
+
+@keyframes flash {
+  from { opacity: 0.5; }
+  to { opacity: 1; }
+}
+
+/* Additional memory optimizations */
+@media (max-memory: 256mb) {
+  * {
+    animation-duration: 0ms !important;
+    transition-duration: 0ms !important;
+  }
+  
+  .holographic-menu,
+  .performance-stats {
+    background: #000;
+  }
 }

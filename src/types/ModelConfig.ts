@@ -87,5 +87,17 @@ export const MODEL_CONFIGS: Record<string, ModelConfig> = {
     modelPath: 'https://api.huggingface.co/models/meta-llama/Llama-2-7b-chat-hf',
     type: 'cloud',
     name: 'Llama (Cloud)'
+  },
+  'mistral-7b': {
+    modelPath: './models/mistral-7b-instruct-v0.3.gguf',
+    type: 'local',
+    maxTokens: 4096,
+    systemPrompt: 'You are a helpful AI assistant.',
+    settings: {
+      temperature: 0.7,
+      topP: 0.95,
+      repetitionPenalty: 1.1,
+      contextWindow: 8192
+    }
   }
 };

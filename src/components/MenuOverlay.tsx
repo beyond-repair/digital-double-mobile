@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { ModelManager } from '../services/ModelManager';
 import { ErrorBoundary } from 'react-error-boundary';
 import { MODEL_CONFIGS } from '../types/ModelConfig';
+import { FileSystem } from '../utils/FileSystem';
 
 declare global {
   interface Performance {
@@ -35,8 +36,18 @@ export const MenuOverlay: React.FC<MenuOverlayProps> = ({ activeModel, onModelCh
   const [retryCount, setRetryCount] = useState(0);
   const [errorCount, setErrorCount] = useState(0);
   const [memoryUsage, setMemoryUsage] = useState<number>(0);
+  const [performanceMetrics, setPerformanceMetrics] = useState({
+    fps: 0,
+    memoryUtilization: 0,
+    lastOptimization: 0
+  });
   const MAX_RETRIES = 3;
   const ERROR_THRESHOLD = 3;
+  const MEMORY_THRESHOLDS = {
+    WARN: 40, // Lower threshold for larger models
+    CRITICAL: 65,
+    FATAL: 80
+  };
 
   const initializeModel = useCallback(async () => {
     if (retryCount >= MAX_RETRIES) {
@@ -47,9 +58,30 @@ export const MenuOverlay: React.FC<MenuOverlayProps> = ({ activeModel, onModelCh
     try {
       setModelStatus('loading');
       const modelConfig = MODEL_CONFIGS[activeModel];
+      
+      // Validate model file first
+      if (modelConfig.type === 'local') {
+        const { isValid, size } = await FileSystem.validateModelFile(modelConfig.modelPath);
+        if (!isValid) {
+          throw new Error(`Invalid model file at: ${modelConfig.modelPath}`);
+        }
+        if (size > 1024 * 1024 * 1024 * 8) { // 8GB
+          throw new Error('Model file too large for available memory');
+        }
+      }
+
       const modelManager = ModelManager.getInstance({ 
-        modelPath: modelConfig.modelPath 
+        modelPath: modelConfig.modelPath,
+        useLocalCache: modelConfig.type === 'local'
       });
+      
+      if (modelConfig.type === 'local') {
+        await FileSystem.loadModelWithProgress(
+          modelConfig.modelPath,
+          (progress) => setDownloadProgress(progress)
+        );
+      }
+      
       const response = await modelManager.downloadModel();
       
       if (response.status === 'error') {
@@ -83,33 +115,50 @@ export const MenuOverlay: React.FC<MenuOverlayProps> = ({ activeModel, onModelCh
         modelPath: MODEL_CONFIGS[activeModel].modelPath 
       });
 
-      // More aggressive memory monitoring
-      const currentMemory = modelManager.getMemoryUsage();
-      const heapSize = performance?.memory?.usedJSHeapSize || 0;
-      const heapLimit = performance?.memory?.jsHeapSizeLimit || 0;
-      const memoryUsagePercent = (heapSize / heapLimit) * 100;
-      
-      setMemoryUsage(currentMemory);
+      const now = performance.now();
+      const metrics = {
+        memory: modelManager.getMemoryUsage(),
+        heap: performance?.memory?.usedJSHeapSize || 0,
+        heapLimit: performance?.memory?.jsHeapSizeLimit || 0,
+        fps: 1000 / (now - (performanceMetrics.lastOptimization || now))
+      };
 
-      if (memoryUsagePercent > 60) { // Lower threshold for proactive optimization
-        console.warn(`High memory usage: ${memoryUsagePercent.toFixed(1)}%`);
+      const memoryPercent = (metrics.heap / metrics.heapLimit) * 100;
+      setMemoryUsage(metrics.memory);
+
+      // Progressive optimization strategy
+      if (memoryPercent > MEMORY_THRESHOLDS.WARN) {
         await modelManager.optimizeMemory();
+        modelManager.clearCache();
+      }
+      if (memoryPercent > MEMORY_THRESHOLDS.CRITICAL) {
+        await modelManager.unloadInactiveModels();
+        modelManager.compactHeap();
+      }
+      if (memoryPercent > MEMORY_THRESHOLDS.FATAL) {
+        throw new Error(`Memory usage critical: ${memoryPercent.toFixed(1)}%`);
       }
 
-      if (memoryUsagePercent > 85) {
-        throw new Error('Critical memory usage');
+      if (metrics.fps < 30 || memoryPercent > MEMORY_THRESHOLDS.WARN) {
+        await modelManager.optimizePerformance({
+          aggressiveGC: metrics.fps < 20,
+          unloadUnused: true
+        });
+        setPerformanceMetrics(prev => ({
+          ...prev,
+          lastOptimization: now
+        }));
       }
 
-      // Add checkpoints for model status
-      const status = modelManager.getModelStatus();
-      if (status === 'error' && retryCount < MAX_RETRIES) {
-        await initializeModel();
+      // Health check with circuit breaker
+      if (errorCount > ERROR_THRESHOLD) {
+        await modelManager.reset();
+        setErrorCount(0);
       }
     } catch (error) {
-      console.error('System monitoring error:', error);
-      handleError(error);
+      handleError(error as Error);
     }
-  }, [activeModel, handleError, retryCount, initializeModel]);
+  }, [activeModel, errorCount, performanceMetrics.lastOptimization]);
 
   useEffect(() => {
     const sysMonitor = setInterval(monitorSystem, 1000); // More frequent checks
@@ -148,6 +197,12 @@ export const MenuOverlay: React.FC<MenuOverlayProps> = ({ activeModel, onModelCh
         modelPath: MODEL_CONFIGS[newModel].modelPath 
       });
       
+      // Enhanced cleanup for large models
+      if (newModel === 'mistral-7b') {
+        await modelManager.fullCleanup();
+        await modelManager.preloadOptimization();
+      }
+      
       // Cleanup previous model
       await modelManager.cleanup();
       
@@ -169,9 +224,24 @@ export const MenuOverlay: React.FC<MenuOverlayProps> = ({ activeModel, onModelCh
     }
   }, [initializeModel, onModelChange]);
 
+  const handleKeyPress = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      ModelManager.getInstance().cleanup();
+    }
+    if (e.key === 'Enter' && modelStatus === 'error') {
+      initializeModel();
+    }
+  }, [modelStatus, initializeModel]);
+
   return (
     <ErrorBoundary FallbackComponent={ErrorFallback}>
-      <div className="menu-overlay" role="menu" tabIndex={0}>
+      <div 
+        className="menu-overlay" 
+        role="menu" 
+        tabIndex={0}
+        onKeyDown={handleKeyPress}
+        aria-label="Model control menu"
+      >
         <div className="holographic-menu">
           <div className={`model-status ${modelStatus}`}>
             Model Status: {modelStatus}
@@ -185,17 +255,23 @@ export const MenuOverlay: React.FC<MenuOverlayProps> = ({ activeModel, onModelCh
             className="model-select"
             value={activeModel}
             onChange={(e) => handleModelChange(e.target.value)}
+            aria-label="Select AI model"
           >
             <option value="deepseek-local">DeepSeek (Local)</option>
             <option value="llama-cloud">Llama (Cloud)</option>
+            <option value="mistral-7b">Mistral 7B</option>
           </select>
           <button className="menu-item" role="menuitem">Browser</button>
           <button className="menu-item" role="menuitem">Calendar</button>
           <button className="menu-item" role="menuitem">Notes</button>
           <button className="menu-item" role="menuitem">Settings</button>
-        </div>
-        <div className="performance-metrics">
-          Memory Usage: {(memoryUsage / (1024 * 1024)).toFixed(2)}MB
+          <div className="performance-stats">
+            <div>FPS: {performanceMetrics.fps.toFixed(1)}</div>
+            <div>Memory: {(memoryUsage / (1024 * 1024)).toFixed(2)}MB</div>
+            {performanceMetrics.fps < 30 && (
+              <div className="performance-warning">Performance degraded</div>
+            )}
+          </div>
         </div>
       </div>
     </ErrorBoundary>
