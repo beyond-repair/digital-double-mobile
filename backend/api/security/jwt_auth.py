@@ -4,9 +4,18 @@ from typing import Optional, Dict
 import jwt
 from jwt import ExpiredSignatureError, InvalidTokenError
 import os
+from datetime import datetime, timedelta
 
 security = HTTPBearer()
 
+def create_token(data: dict, expires_delta: timedelta = timedelta(hours=24)) -> str:
+    expire = datetime.utcnow() + expires_delta
+    to_encode = {**data, "exp": expire}
+    return jwt.encode(
+        to_encode,
+        os.getenv("JWT_SECRET_KEY"),
+        algorithm="HS256"
+    )
 
 async def validate_token(
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(security)
@@ -29,8 +38,14 @@ async def validate_token(
         payload = jwt.decode(
             token,
             key=secret_key,
-            algorithms=["HS256"]
+            algorithms=["HS256"],
+            options={"verify_exp": True}
         )
+        if payload.get("refresh", False):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Cannot use refresh token for access"
+            )
         return payload  # Contains user data like 'user_id'
     except ExpiredSignatureError:
         raise HTTPException(

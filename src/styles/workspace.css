@@ -112,3 +112,85 @@
     1px -1px 0 #000,
     -1px 1px 0 #000;
 }
+
+.model-select {
+  background: rgba(0, 0, 0, 0.8);
+  border: 2px solid #00ff00;
+  color: #00ff00;
+  font-family: 'Press Start 2P', cursive;
+  padding: 8px;
+  margin-bottom: 16px;
+  width: 100%;
+  max-width: 300px;
+}
+
+.holographic-menu {
+  background: rgba(0, 0, 0, 0.9);
+  border: 2px solid #00ff00;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+}
+
+.menu-item {
+  background: transparent;
+  border: 2px solid #00ff00;
+  color: #00ff00;
+  font-family: 'Press Start 2P', cursive;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.menu-item:hover {
+  background: rgba(0, 255, 0, 0.2);
+  transform: scale(1.05);
+}
+
+.model-status {
+  font-family: 'Press Start 2P', cursive;
+  padding: 8px;
+  margin-bottom: 8px;
+  border: 2px solid;
+  text-align: center;
+}
+
+.model-status.loading {
+  border-color: #ffff00;
+  color: #ffff00;
+}
+
+.model-status.ready {
+  border-color: #00ff00;
+  color: #00ff00;
+}
+
+.model-status.error {
+  border-color: #ff0000;
+  color: #ff0000;
+}
+
+.download-progress {
+  margin-top: 8px;
+  font-size: 0.8em;
+  color: #ffff00;
+  background: rgba(0, 0, 0, 0.5);
+  padding: 4px;
+  border-radius: 4px;
+}
+
+.download-progress::before {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  background: currentColor;
+  border-radius: 50%;
+  margin-right: 8px;
+  animation: pulse 1s infinite;
+}

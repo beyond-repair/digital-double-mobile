@@ -1,5 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Response, BackgroundTasks
-from fastapi.responses import JSONResponse
+from fastapi import (APIRouter, Depends, HTTPException, status,
+                     Response, BackgroundTasks)
+
 from pydantic import BaseModel
 from datetime import datetime
 from typing import Optional, Dict, Any
@@ -111,8 +112,9 @@ def get_cached_config() -> Dict[str, Any]:
 async def create_task(
     task_data: TaskSchema,
     response: Response,
-    token_data=Depends(validate_token),
-    background_tasks: BackgroundTasks
+  # Keep this line unchanged
+    background_tasks: BackgroundTasks,  
+    token_data=Depends(validate_token)
 ):
     try:
         config = get_cached_config()

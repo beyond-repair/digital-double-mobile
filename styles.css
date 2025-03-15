@@ -352,6 +352,7 @@ body {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  z-index: 1000;
 }
 
 .chat-window {
@@ -441,6 +442,7 @@ body {
     min-height: 200px;
     position: absolute;
     cursor: move;
+    z-index: 900;
 }
 
 .window-header {
@@ -451,6 +453,7 @@ body {
     justify-content: space-between;
     align-items: center;
     font-family: 'Press Start 2P', cursive;
+    z-index: 901;
 }
 
 .close-btn {
@@ -466,6 +469,13 @@ body {
     padding: 1rem;
     height: calc(100% - 2.5rem);
     overflow: auto;
+}
+
+/* Improve dragging feedback */
+.tool-window.dragging {
+    opacity: 0.8;
+    transform: scale(1.02);
+    transition: transform 0.1s ease;
 }
 
 /* 3D Scene */
