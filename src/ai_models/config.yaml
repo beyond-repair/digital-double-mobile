@@ -5,18 +5,18 @@ models:
     max_sequence_length: 512
     temperature: 0.7
     top_p: 0.9
-
+  dolphin3.0-r1:
+    modelPath: 'https://api.openrouter.ai/api/v1/model/cognitivecomputations/dolphin3.0-r1-mistral-24b'
+    type: 'cloud'
 agent_pools:
   business:
     min_agents: 2
     max_agents: 10
     scaling_factor: 1.5
-
   creative:
     min_agents: 1
     max_agents: 5
     scaling_factor: 1.2
-
 execution:
   local_threshold: 100ms
   cloud_fallback: true
