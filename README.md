@@ -16,30 +16,32 @@ SUCCESSOR   Digital_Double_virtual_workforce
 
 ---
 
-> **SUPERSEDED (Sweep-076)**
+> **SUPERSEDED (Sweep-184 re-audit)**
 >
 > Classification: **SUPERSEDED**.
 > Canonical successor: [Digital_Double_virtual_workforce](https://github.com/beyond-repair/Digital_Double_virtual_workforce).
-> Do not add features here. Do not treat the historical feature list below as VERIFIED.
+> Claim ledger: [CLAIM_STATUS.md](CLAIM_STATUS.md).
+> Guard: `python scripts/superseded_guard.py` (banner + metrics echo only).
+> Do not treat the historical feature list or `backend/api/tests/test_business_routes.py` as VERIFIED. That test imports `v1_1_api`, which is not in this tree.
 > GitHub `archived` flag remains operator-only.
 >
-> **Security residual:** `.env` is committed on `main`. Operator must rotate any credentials that ever lived in that file and purge the blob from future history via a *new* commit path only after rotation (no history rewrite in this sweep).
+> **Security residual:** `.env` is still committed on `main` (blob present at Sweep-184 tree). Operator must rotate any credentials that ever lived in that file. Purge is operator-only. No history rewrite in this sweep.
 
 # Digital Double Mobile (historical tree)
 
-Historical mobile-adjacent sketch. Product authority is the public canonical Digital Double repository. The remainder of this file is **UNVERIFIED** marketing/planning text retained for history.
+Historical mobile-adjacent sketch. Product authority is the public canonical Digital Double repository.
 
-## Status table (Sweep-076)
+## Status table (Sweep-184)
 
 | Item | State |
 |------|--------|
-| Feature marketing list in prior README | UNVERIFIED / SUPERSEDED |
-| CI workflows | ABSENT (no `.github/workflows` observed this cycle) |
-| Tags / releases | UNVERIFIED this cycle (not tagged as ACTIVE) |
-| Tests as product gate | UNVERIFIED |
+| Classification | SUPERSEDED (reconfirmed) |
+| Claim | 0 |
+| CI | `superseded-guard` workflow added this sweep; post-push run not yet observed at commit time |
+| Historical business-route test | Not a product gate (missing `v1_1_api`) |
 | Committed `.env` | OPEN security finding |
 | `node_modules` in tree | Residual hygiene issue |
-
+| Tags / releases | Not created |
 
 ---
 
