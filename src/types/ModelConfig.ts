@@ -38,7 +38,7 @@ export interface ModelValidation {
 
 export interface TelemetryEvent {
   timestamp: number;
-  type: 'error' | 'performance' | 'usage';
+  type: 'error' | 'performance' | 'usage' | 'recovery';
   data: Record<string, unknown>;
 }
 

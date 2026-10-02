@@ -14,7 +14,7 @@ interface State {
 export class ErrorBoundary extends Component<Props, State> {
   private retryCount = 0;
   private maxRetries = 3;
-  private resetTimeout: NodeJS.Timeout | null = null;
+  private resetTimeout: ReturnType<typeof setTimeout> | null = null;
   private lastErrorTime: number = 0;
   private metrics = {
     totalErrors: 0,
