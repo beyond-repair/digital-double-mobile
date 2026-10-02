@@ -1,7 +1,26 @@
-// TaskManager.ts - Centralized task management system for enterprise workflows
+/** Claim-0 in-browser task status stub (pairs with offline FastAPI). */
+
+export type TaskStatusItem = {
+  id: string;
+  description: string;
+  priority: string;
+  status: string;
+};
+
+export type TaskStatus = TaskStatusItem[];
+
+export type Task = TaskStatusItem;
+
 export class TaskManager {
   private static instance: TaskManager;
-  private tasks: Record<string, Function> = {};
+  private tasks: TaskStatusItem[] = [
+    {
+      id: 'demo-1',
+      description: 'Claim-0 offline workspace demo',
+      priority: 'LOW',
+      status: 'created',
+    },
+  ];
 
   private constructor() {}
 
@@ -12,28 +31,32 @@ export class TaskManager {
     return TaskManager.instance;
   }
 
-  public registerTask(taskId: string, taskFn: Function): void {
-    this.tasks[taskId] = taskFn;
+  public registerTask(taskId: string, _taskFn: (...args: unknown[]) => unknown): void {
+    this.tasks.push({
+      id: taskId,
+      description: `registered:${taskId}`,
+      priority: 'LOW',
+      status: 'registered',
+    });
   }
 
-  public executeTask(taskId: string, ...args: any[]): any {
-    if (this.tasks[taskId]) {
-      return this.tasks[taskId](...args);
+  public executeTask(taskId: string, ..._args: unknown[]): unknown {
+    const found = this.tasks.find((t) => t.id === taskId);
+    if (!found) {
+      throw new Error(`Task ${taskId} not found`);
     }
-    throw new Error(`Task ${taskId} not found`);
+    return found;
   }
 
   public async getTaskStatus(): Promise<TaskStatus> {
-    // Implementation details
-    return { /* task status details */ };
+    return [...this.tasks];
   }
 
   public async getOverdueTasks(): Promise<Task[]> {
-    // Implementation details
     return [];
   }
 
   public async autoAssignTasks(): Promise<void> {
-    // Implementation details
+    return;
   }
 }

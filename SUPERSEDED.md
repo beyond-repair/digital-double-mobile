@@ -1,8 +1,9 @@
-> **SUPERSEDED (Sweep-184 re-audit)**
+> **SUPERSEDED (Claim-0 runnable repair)**
 >
 > Classification: SUPERSEDED.
 > CLAIM 0.
 > Canonical: https://github.com/beyond-repair/Digital_Double_virtual_workforce
 >
-> Do not add features here. GitHub `archived` flag is operator-only after secret rotation.
-> Committed `.env` and `node_modules` remain operator hygiene items. No history rewrite in this sweep.
+> Offline FastAPI + Vite build are Claim-0 hygiene only. Do not add product features here.
+> GitHub `archived` flag is operator-only after secret rotation.
+> Committed `.env` purged from working tree (no history rewrite).

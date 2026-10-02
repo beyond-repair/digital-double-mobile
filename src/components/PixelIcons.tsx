@@ -1,11 +1,16 @@
 import React from 'react';
+import type { TaskStatusItem } from '../services/TaskManager';
 
-export const PixelIcons: React.FC = () => {
+type Props = {
+  tasks?: TaskStatusItem[];
+};
+
+export const PixelIcons: React.FC<Props> = ({ tasks = [] }) => {
   const icons = [
     { name: 'browser', icon: '🌐' },
     { name: 'calendar', icon: '📅' },
     { name: 'notes', icon: '📝' },
-    { name: 'settings', icon: '⚙️' }
+    { name: 'settings', icon: '⚙️' },
   ];
 
   return (
@@ -14,6 +19,12 @@ export const PixelIcons: React.FC = () => {
         <div key={name} className="pixel-icon">
           <span className="icon">{icon}</span>
           <span className="icon-label">{name}</span>
+        </div>
+      ))}
+      {tasks.slice(0, 4).map((task) => (
+        <div key={task.id} className="pixel-icon task-chip" title={task.description}>
+          <span className="icon">📌</span>
+          <span className="icon-label">{task.priority}</span>
         </div>
       ))}
     </>

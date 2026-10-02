@@ -1,13 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { colors } from '../utils/colors';
 import { MenuOverlay } from './MenuOverlay';
 import { PixelIcons } from './PixelIcons';
-import { TaskManager } from '../services/TaskManager';
+import { TaskManager, type TaskStatusItem } from '../services/TaskManager';
 import { ErrorBoundary } from './ErrorBoundary';
-import { trackMetrics, sendTelemetry } from '../types/ModelConfig';
+import { trackMetrics } from '../types/ModelConfig';
 
 export const PixelWorkspace: React.FC = () => {
-  const [tasks, setTasks] = useState([]);
+  const [tasks, setTasks] = useState<TaskStatusItem[]>([]);
   const [activeModel, setActiveModel] = useState('deepseek-local');
   const [loading, setLoading] = useState(true);
 
@@ -17,6 +16,10 @@ export const PixelWorkspace: React.FC = () => {
       const taskManager = TaskManager.getInstance();
       const taskStatus = await taskManager.getTaskStatus();
       setTasks(taskStatus);
+      trackMetrics({
+        renderTime: 0,
+        domNodes: typeof document !== 'undefined' ? document.querySelectorAll('*').length : 0,
+      });
     } catch (err) {
       console.error('Failed to load tasks:', err);
     } finally {
@@ -26,40 +29,14 @@ export const PixelWorkspace: React.FC = () => {
 
   useEffect(() => {
     loadTasks();
-    const interval = setInterval(loadTasks, 30000);
-    return () => clearInterval(interval);
   }, [loadTasks]);
-
-  useEffect(() => {
-    const observer = new PerformanceObserver((list) => {
-      const entries = list.getEntries();
-      trackMetrics({
-        renderTime: entries[0]?.duration,
-        domNodes: document.querySelectorAll('*').length
-      });
-    });
-    
-    observer.observe({ entryTypes: ['render'] });
-    return () => observer.disconnect();
-  }, []);
-
-  const handleKeyNav = useCallback((e: KeyboardEvent) => {
-    if (e.key === 'Tab') {
-      document.body.classList.add('keyboard-nav');
-    }
-  }, []);
-
-  useEffect(() => {
-    window.addEventListener('keydown', handleKeyNav);
-    return () => window.removeEventListener('keydown', handleKeyNav);
-  }, [handleKeyNav]);
 
   return (
     <ErrorBoundary>
       <div className="pixel-workspace" role="main">
-        <div 
-          className="loading-overlay" 
-          role="alert" 
+        <div
+          className="loading-overlay"
+          role="alert"
           aria-live="polite"
           data-visible={loading}
         >
