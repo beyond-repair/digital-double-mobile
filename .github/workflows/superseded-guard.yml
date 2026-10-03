@@ -13,5 +13,9 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+      - name: Install Claim-0 Python deps
+        run: python -m pip install -r requirements.txt
+      - name: Claim-0 pytest
+        run: python -m pytest -q
       - name: SUPERSEDED banner and metrics echo
         run: python scripts/superseded_guard.py
