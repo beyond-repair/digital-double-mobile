@@ -21,6 +21,8 @@ def main() -> int:
     missing = [token for token in REQUIRED if token not in readme or token not in banner]
     if "0" not in claim or "SUPERSEDED" not in claim:
         missing.append("CLAIM_STATUS")
+    if (ROOT / ".env").exists():
+        missing.append("working-tree .env")
     if missing:
         print("FAIL", missing)
         return 1

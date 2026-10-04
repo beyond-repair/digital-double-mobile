@@ -39,7 +39,7 @@ Historical TS/React + Python tree repaired so a stranger can clone, install, run
 | Claim | 0 |
 | Offline FastAPI | `/health`, `/metrics`, in-memory `/tasks` |
 | Vite React `src/` | builds (offline menu shell; no model download) |
-| Committed `.env` | **removed from tree** this repair — rotate any keys that ever lived there (incl. historical OpenRouter placeholder) |
+| Committed `.env` | removed from tree; secret scanning alert #1 still open — rotate/revoke; guard fails if `.env` returns |
 | `node_modules` in git | untracked / removed from index |
 | Dependabot PR #2 | ignored (vite bump); not merged by this repair |
 
@@ -51,7 +51,7 @@ Historical TS/React + Python tree repaired so a stranger can clone, install, run
 | `python -m dd_mobile serve` | `uvicorn` on `127.0.0.1:8000` |
 | `pytest` | health, tasks CRUD, metrics echo, superseded guard, main smoke |
 | `npm install && npm run build` | Vite React pixel-workspace shell |
-| `scripts/superseded_guard.py` | Banner + metrics echo |
+| `scripts/superseded_guard.py` | Banner + metrics echo + working-tree `.env` absence |
 
 Broken historical paths (`v1_1_api`, DB pool `create_pool`, cloud model Worker download) are **not** product gates. Historical business-route file remains under `backend/api/` for identity; Claim-0 API is `dd_mobile.app`.
 
@@ -97,7 +97,7 @@ Copy `.env.example` only if you experiment locally — never commit `.env`.
 
 ## Security note
 
-A `.env` blob previously lived on `main`. It is deleted from the working tree in this Claim-0 repair (no history rewrite). **Rotate** any credentials that may have been present (including OpenRouter-style keys). Use `.env.example` placeholders only.
+A `.env` blob previously lived on `main`. It is deleted from the working tree in this Claim-0 repair (no history rewrite). Secret scanning alert #1 remains open. **Rotate and revoke** any credentials that may have been present (including OpenRouter-style keys). Use `.env.example` placeholders only. The superseded guard fails if `.env` is present in the working tree.
 
 ## What this repository is not
 
